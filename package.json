@@ -1,0 +1,34 @@
+{
+  "author": {
+    "email": "mike.maccana@gmail.com",
+    "name": "Mike MacCana"
+  },
+  "bugs": {
+    "url": "https://github.com/mikemaccana/whoisxmlapi/issues"
+  },
+  "description": "Client for whoisxmlapi.com, with JSON results!",
+  "homepage": "https://github.com/mikemaccana/whoisxmlapi",
+  "license": "MIT",
+  "main": "index.js",
+  "maintainers": [
+    {
+      "name": "mikemaccana",
+      "email": "mike.maccana@gmail.com"
+    }
+  ],
+  "name": "whoisxmlapi",
+  "optionalDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mikemaccana/whoisxmlapi.git"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "version": "1.0.0",
+  "dependencies": {
+    "find-parent-dir": "^0.3.0",
+    "lodash": "^4.15.0",
+    "superagent": "^1.5.0"
+  }
+}
