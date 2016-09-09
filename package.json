@@ -25,7 +25,7 @@
   "scripts": {
     "test": "mocha"
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "dependencies": {
     "find-parent-dir": "^0.3.0",
     "lodash": "^4.15.0",

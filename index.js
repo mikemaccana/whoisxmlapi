@@ -30,7 +30,7 @@ module.exports = function(username, password){
 			}
 
 			if ( err ) {
-				log("jsonwhois error:", err)
+				log("whoisamlapi error:", err)
 				return cb(err)
 			}
 
