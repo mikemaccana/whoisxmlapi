@@ -15,26 +15,37 @@ module.exports = function(username, password){
 		query.outputFormat = 'JSON';
 		query.output_format = 'JSON';
 
+		log('still not sure if logs work')
+
 		superagent
 		.get(url)
 		.query(query)
-		.end(function(err, result){
+		.end(function(err, res){
 
-			// whoisxmlapi.com incorrectly uses text/plain as the type instead of JSON
-			result.body = JSON.parse(result.text);
+			// the res may sometims actually *be HTML instead of JSON*. Christ.
+			var isHTML = ( res.text['0'] === '<' )
+			if ( isHTML ) {
+				log('HTML response from whoisxmlapi for', res.req.path, res.text)
+				err = 'Got non-JSON response from whoisxmlapi'
+				return
+			} else {
+				// whoisxmlapi.com incorrectly uses text/plain as the type instead of JSON
+				res.body = JSON.parse(res.text);
+			}
 
 			// Eg, { ErrorMessage: { msg: 'User Account certsimple has 0/5100 queries available, please refill' } }
-			var additionalError = _.get(result.body, ['ErrorMessage','msg'], null)
+			var additionalError = _.get(res.body, ['ErrorMessage','msg'], null)
 			if ( additionalError ) {
 				err = additionalError;
 			}
 
 			if ( err ) {
 				log("whoisamlapi error:", err)
-				return cb(err)
+				cb(err)
+				return
 			}
 
-			cb(err, result.body || null)
+			cb(err, res.body || null)
 
 		})
 	}
