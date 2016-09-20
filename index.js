@@ -15,8 +15,6 @@ module.exports = function(username, password){
 		query.outputFormat = 'JSON';
 		query.output_format = 'JSON';
 
-		log('still not sure if logs work')
-
 		superagent
 		.get(url)
 		.query(query)
