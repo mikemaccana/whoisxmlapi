@@ -20,21 +20,29 @@ module.exports = function(username, password){
 		.query(query)
 		.end(function(err, res){
 
-			// the res may sometims actually *be HTML instead of JSON*. Christ.
-			var isHTML = ( res.text['0'] === '<' )
-			if ( isHTML ) {
-				log('HTML response from whoisxmlapi for', res.req.path, res.text)
-				err = 'Got non-JSON response from whoisxmlapi'
-				return
-			} else {
-				// whoisxmlapi.com incorrectly uses text/plain as the type instead of JSON
-				res.body = JSON.parse(res.text);
+			var isHTML = false;
+			var additionalError = null
+
+			// the res may sometimes actually *be HTML instead of JSON* - usually for
+			// 404s etc. Christ.
+			if ( res.text ) {
+				isHTML = ( res.text['0'] === '<' )
+				if ( isHTML ) {
+					log('HTML response from whoisxmlapi for', res.req.path, res.text)
+					err = 'Got non-JSON response from whoisxmlapi'
+					return
+				} else {
+					// whoisxmlapi.com incorrectly uses text/plain as the type instead of JSON
+					res.body = JSON.parse(res.text);
+				}
 			}
 
 			// Eg, { ErrorMessage: { msg: 'User Account certsimple has 0/5100 queries available, please refill' } }
-			var additionalError = _.get(res.body, ['ErrorMessage','msg'], null)
-			if ( additionalError ) {
-				err = additionalError;
+			if ( res.body ) {
+				var additionalError = _.get(res.body, ['ErrorMessage','msg'], null)
+				if ( additionalError ) {
+					err = additionalError;
+				}
 			}
 
 			if ( err ) {
