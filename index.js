@@ -1,11 +1,15 @@
 var superagent = require('superagent'),
 	_ = require('lodash'),
 	fs = require('fs'),
-	log = console.log.bind(console);
+	log = console.log.bind(console),
+	LRU = require("lru-cache");
+
+const CACHE_MAX_ITEMS = 500,
+	DEBUG_LOG_FILE = 'whois-history.log';
 
 module.exports = function(username, password, debug){
 
-	const DEBUG_LOG_FILE = 'whois-history.log';
+	var lookupCache = LRU(CACHE_MAX_ITEMS);
 
 	// Common logic for all whoisxmlapi functions
 	var get = function(resource, query, cb){
@@ -72,7 +76,7 @@ module.exports = function(username, password, debug){
 		return value ? 1 : 0;
 	}
 
-	var lookupNoLog = function(domain, cb){
+	var lookupRaw = function(domain, cb){
 		// See https://www.whoisxmlapi.com/code/javascript/whois.txt
 		// NOTE: the docs use an insecure URL, but https works.
 		get('/whoisserver/WhoisService', {
@@ -80,19 +84,22 @@ module.exports = function(username, password, debug){
 		}, cb);
 	}
 
+	// Add a cache to whois
+	// Makes our app faster and limits repeated API calls
 	var lookup = function(domain, cb){
-		if ( debug ) {
-			var logEntry = `${new Date()} ${domain}\n`;
-			fs.appendFile(DEBUG_LOG_FILE, logEntry, function(err){
-				if ( err ) {
-					log('Error logging debug file', err)
-					// Ignore logging errors, still run whois
-				}
-				lookupNoLog(domain, cb)
-			});
-		} else {
-			lookupNoLog(domain, cb)
+		var cachedEntry = lookupCache.get(domain)
+		if ( cachedEntry ) {
+			cb(null, cachedEntry)
+			return
 		}
+		lookupRaw(domain, function(err, result){
+			if ( ! err ) {
+				if ( result ) {
+					lookupCache.set(domain, result)
+				}
+			}
+			cb(err, result)
+		})
 	}
 
 	var setWarnThreshold = function(warnThreshold, warnThresholdEnabled, warnEmptyEnabled, cb){

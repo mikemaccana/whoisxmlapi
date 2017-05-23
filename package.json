@@ -9,6 +9,7 @@
   "dependencies": {
     "find-parent-dir": "^0.3.0",
     "lodash": "^4.15.0",
+    "lru-cache": "^4.0.2",
     "superagent": "^3.5.2"
   },
   "description": "Client for whoisxmlapi.com, with JSON results!",
@@ -37,5 +38,5 @@
   "scripts": {
     "test": "mocha"
   },
-  "version": "1.2.0"
+  "version": "1.2.1"
 }
