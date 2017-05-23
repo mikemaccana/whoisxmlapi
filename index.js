@@ -1,11 +1,14 @@
 var superagent = require('superagent'),
 	_ = require('lodash'),
+	fs = require('fs'),
 	log = console.log.bind(console);
 
-module.exports = function(username, password){
+module.exports = function(username, password, debug){
+
+	const DEBUG_LOG_FILE = 'whois-history.log';
 
 	// Common logic for all whoisxmlapi functions
-	var get = function(url, query, cb){
+	var get = function(resource, query, cb){
 
 		query.username = username;
 		query.password = password;
@@ -16,12 +19,20 @@ module.exports = function(username, password){
 		query.output_format = 'JSON';
 
 		superagent
-		.get(url)
+		.get(`https://www.whoisxmlapi.com${resource}`)
 		.query(query)
 		.end(function(err, res){
 
 			var isHTML = false;
 			var additionalError = null
+
+			// Sporadically whoisxmapi seems to not have any response at all
+			// We haven't caught this yet, so let log it.
+			if ( ! res ) {
+				log('No response from whoisxmlapi!', err)
+				cb(err, null)
+				return
+			}
 
 			// the res may sometimes actually *be HTML instead of JSON* - usually for
 			// 404s etc. Christ.
@@ -46,7 +57,7 @@ module.exports = function(username, password){
 			}
 
 			if ( err ) {
-				log("whoisamlapi error:", err)
+				log("whoisxmlapi error:", err)
 				cb(err)
 				return
 			}
@@ -61,17 +72,33 @@ module.exports = function(username, password){
 		return value ? 1 : 0;
 	}
 
-	var lookup = function(domain, cb){
+	var lookupNoLog = function(domain, cb){
 		// See https://www.whoisxmlapi.com/code/javascript/whois.txt
-		get('http://www.whoisxmlapi.com/whoisserver/WhoisService', {
-			"domainName": domain
+		// NOTE: the docs use an insecure URL, but https works.
+		get('/whoisserver/WhoisService', {
+			domainName: domain
 		}, cb);
+	}
+
+	var lookup = function(domain, cb){
+		if ( debug ) {
+			var logEntry = `${new Date()} ${domain}\n`;
+			fs.appendFile(DEBUG_LOG_FILE, logEntry, function(err){
+				if ( err ) {
+					log('Error logging debug file', err)
+					// Ignore logging errors, still run whois
+				}
+				lookupNoLog(domain, cb)
+			});
+		} else {
+			lookupNoLog(domain, cb)
+		}
 	}
 
 	var setWarnThreshold = function(warnThreshold, warnThresholdEnabled, warnEmptyEnabled, cb){
 		// See https://www.whoisxmlapi.com/code/javascript/whois.txt
-		get('http://www.whoisxmlapi.com/accountServices.php', {
-			"servicetype": "accountUpdate",
+		get('/accountServices.php', {
+			servicetype: "accountUpdate",
 			warn_threshold: warnThreshold,
 			warn_threshold_enabled: toBool(warnThresholdEnabled),
 			warn_empty_enabled: toBool(warnEmptyEnabled)
@@ -79,8 +106,8 @@ module.exports = function(username, password){
 	}
 
 	var getAccountBalance = function(cb){
-		get('http://www.whoisxmlapi.com/accountServices.php', {
-			"servicetype": "accountbalance"
+		get('/accountServices.php', {
+			servicetype: "accountbalance"
 		}, cb)
 	}
 

@@ -6,7 +6,7 @@ var assert = require('assert'),
 	findParentDir = require('find-parent-dir'),
 	configDir = findParentDir.sync(__dirname, 'config.js'),
 	config = require(configDir+'config.js'),
-	whois = require('../index.js')(config.whoisxmlapi.username, config.whoisxmlapi.password),
+	whois = require('../index.js')(config.whoisxmlapi.username, config.whoisxmlapi.password, true),
 	log = console.log.bind(console)
 
 suite('whoisxmlapi account management works (uses network)', function(){
