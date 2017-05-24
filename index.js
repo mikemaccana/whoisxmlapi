@@ -4,10 +4,11 @@ var superagent = require('superagent'),
 	log = console.log.bind(console),
 	LRU = require("lru-cache");
 
-const CACHE_MAX_ITEMS = 500,
-	DEBUG_LOG_FILE = 'whois-history.log';
+module.exports = function(username, password, options){
 
-module.exports = function(username, password, debug){
+	options = options || {};
+
+	const CACHE_MAX_ITEMS = options.cacheMaxItems || 500;
 
 	var lookupCache = LRU(CACHE_MAX_ITEMS);
 
