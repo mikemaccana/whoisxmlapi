@@ -7,139 +7,98 @@ var assert = require('assert'),
 	configDir = findParentDir.sync(__dirname, 'config.js'),
 	config = require(configDir+'config.js'),
 	whois = require('../index.js')(config.whoisxmlapi.username, config.whoisxmlapi.password, true),
-	log = console.log.bind(console)
+	log = console.log;
 
 suite('whoisxmlapi account management works (uses network)', function(){
-	test('account balance', function(done){
+	test('account balance', async function(){
 		this.timeout(10 * 1000);
-		whois.getAccountBalance(function(err, result){
-			// Exit ASAP if err
-			if ( err ) {
-				done(err)
-				return
-			}
+		const result = await whois.getAccountBalance()
+		// Example result:
+		// {
+		//   "balance": "4910",
+		//   "reserve": "5100",
+		//   "monthly_balance": null,
+		//   "monthly_reserve": null,
+		//   "reverse_whois_balance": null,
+		//   "reverse_whois_reserve": null,
+		//   "reverse_whois_monthly_balance": null,
+		//   "reverse_whois_monthly_reserve": null,
+		//   "ba_query_balance": null,
+		//   "ba_query_reserve": null,
+		//   "ra_query_balance": null,
+		//   "ra_query_reserve": null,
+		//   "ds_query_balance": null,
+		//   "ds_query_reserve": null,
+		//   "reverse_ip_balance": null,
+		//   "reverse_ip_reserve": null,
+		//   "reverse_ip_monthly_balance": null,
+		//   "reverse_ip_monthly_reserve": null
+		// }
 
-			// Example result:
-			// {
-			//   "balance": "4910",
-			//   "reserve": "5100",
-			//   "monthly_balance": null,
-			//   "monthly_reserve": null,
-			//   "reverse_whois_balance": null,
-			//   "reverse_whois_reserve": null,
-			//   "reverse_whois_monthly_balance": null,
-			//   "reverse_whois_monthly_reserve": null,
-			//   "ba_query_balance": null,
-			//   "ba_query_reserve": null,
-			//   "ra_query_balance": null,
-			//   "ra_query_reserve": null,
-			//   "ds_query_balance": null,
-			//   "ds_query_reserve": null,
-			//   "reverse_ip_balance": null,
-			//   "reverse_ip_reserve": null,
-			//   "reverse_ip_monthly_balance": null,
-			//   "reverse_ip_monthly_reserve": null
-			// }
+		// log('>>>>> result', result)
 
-			assert(result.balance)
-			assert(result.reserve)
-			done()
-		})
+		assert(result.balance)
+		assert(result.reserve)
 	})
 })
 
 suite('Set warning threshhold (uses network, actually changes stuff!)', function(){
 
-	test('Set warning threshold', function(done){
+	test('Set warning threshold', async function(){
 		this.timeout(10 * 1000);
-		var TEST_WARN_THRESHOLD = 500;
-		whois.setWarnThreshold(TEST_WARN_THRESHOLD, true, true, function(err, result){
-			// Exit ASAP if err
-			if ( err ) {
-				done(err)
-				return
-			}
-			// Example result
-			// {
-			//   "balance": "4910",
-			//   "reserve": "5100",
-			//   "monthly_balance": null,
-			//   "monthly_reserve": null,
-			//   "warn_threshold": "500",
-			//   "warn_threshold_enabled": "\u0001",
-			//   "warn_empty_enabled": "\u0001",
-			//   "reverse_whois_balance": null,
-			//   "reverse_whois_reserve": null,
-			//   "reverse_whois_monthly_balance": null,
-			//   "reverse_whois_monthly_reserve": null,
-			//   "ba_query_balance": null,
-			//   "ba_query_reserve": null,
-			//   "ra_query_balance": null,
-			//   "ra_query_reserve": null,
-			//   "ds_query_balance": null,
-			//   "ds_query_reserve": null,
-			//   "reverse_ip_balance": null,
-			//   "reverse_ip_reserve": null,
-			//   "reverse_ip_monthly_balance": null,
-			//   "reverse_ip_monthly_reserve": null
-			// }
-			assert(Number(result.warn_threshold) === TEST_WARN_THRESHOLD)
-			done()
-		})
+		const TEST_WARN_THRESHOLD = 500;
+		const result = await whois.setWarnThreshold(TEST_WARN_THRESHOLD, true, true)
+		// Example result
+		// {
+		//   "balance": "4910",
+		//   "reserve": "5100",
+		//   "monthly_balance": null,
+		//   "monthly_reserve": null,
+		//   "warn_threshold": "500",
+		//   "warn_threshold_enabled": "\u0001",
+		//   "warn_empty_enabled": "\u0001",
+		//   "reverse_whois_balance": null,
+		//   "reverse_whois_reserve": null,
+		//   "reverse_whois_monthly_balance": null,
+		//   "reverse_whois_monthly_reserve": null,
+		//   "ba_query_balance": null,
+		//   "ba_query_reserve": null,
+		//   "ra_query_balance": null,
+		//   "ra_query_reserve": null,
+		//   "ds_query_balance": null,
+		//   "ds_query_reserve": null,
+		//   "reverse_ip_balance": null,
+		//   "reverse_ip_reserve": null,
+		//   "reverse_ip_monthly_balance": null,
+		//   "reverse_ip_monthly_reserve": null
+		// }
+		assert(Number(result.warn_threshold) === TEST_WARN_THRESHOLD)
 	})
 })
 
 
 suite('whoisxmlapi returns expected whois results (uses network)', function(){
-	test('google.com', function(done){
+	test('google.com', async function(){
 		this.timeout(10 * 1000);
-		whois.lookup('google.com', function(err, result){
-			// Exit ASAP if err
-			if ( err ) {
-				done(err)
-				return
-			}
-			assert(result.WhoisRecord.technicalContact)
-			done()
-		})
+		const result = await whois.lookup('google.com')
+		assert(result.WhoisRecord.technicalContact)
 	})
 
-	test('185.119.173.217', function(done){
+	test('185.119.173.217', async function(){
 		this.timeout(10 * 1000);
-		whois.lookup('185.119.173.217', function(err, result){
-			// Exit ASAP if err
-			if ( err ) {
-				done(err)
-				return
-			}
-			assert(result.WhoisRecord.contactEmail)
-			done()
-		})
+		const result = await whois.lookup('185.119.173.217')
+		assert(result.WhoisRecord.contactEmail)
 	})
 
-	test('london.com', function(done){
+	test('london.com', async function(){
 		this.timeout(10 * 1000);
-		whois.lookup('london.com', function(err, result){
-			// Exit ASAP if err
-			if ( err ) {
-				done(err)
-				return
-			}
-			assert(result.WhoisRecord.technicalContact)
-			done(err)
-		})
+		const result = await whois.lookup('london.com')
+		assert(result.WhoisRecord.technicalContact)
 	})
 
-	test('domain with no contact details', function(done){
+	test('domain with no contact details', async function(){
 		this.timeout(10 * 1000);
-		whois.lookup('skagerak.dk', function(err, result){
-			// Exit ASAP if err
-			if ( err ) {
-				done(err)
-				return
-			}
-			assert(result.WhoisRecord.registryData.administrativeContact)
-			done()
-		})
+		const result = await whois.lookup('skagerak.dk')
+		assert(result.WhoisRecord.registryData.administrativeContact)
 	})
 })

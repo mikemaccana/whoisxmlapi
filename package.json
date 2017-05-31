@@ -29,6 +29,9 @@
       "email": "mike.maccana@gmail.com"
     }
   ],
+  "engines" : {
+    "node" : "<8.0.0"
+  },
   "name": "whoisxmlapi",
   "optionalDependencies": {},
   "repository": {
@@ -38,5 +41,5 @@
   "scripts": {
     "test": "mocha"
   },
-  "version": "1.2.2"
+  "version": "2.0.0"
 }

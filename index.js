@@ -13,63 +13,51 @@ module.exports = function(username, password, options){
 	var lookupCache = LRU(CACHE_MAX_ITEMS);
 
 	// Common logic for all whoisxmlapi functions
-	var get = function(resource, query, cb){
+	var get = async function(resource, query){
 
-		query.username = username;
-		query.password = password;
+		try {
+			query.username = username;
+			query.password = password;
 
-		// Yes both. Some URLs use camelCase, others use snake_text.
-		// Specifying both at the same time works fine.
-		query.outputFormat = 'JSON';
-		query.output_format = 'JSON';
+			// Yes both. Some URLs use camelCase, others use snake_text.
+			// Specifying both at the same time works fine.
+			query.outputFormat = 'JSON';
+			query.output_format = 'JSON';
 
-		superagent
-		.get(`https://www.whoisxmlapi.com${resource}`)
-		.query(query)
-		.end(function(err, res){
+			var response = await superagent.get(`https://www.whoisxmlapi.com${resource}`).query(query)
 
-			var isHTML = false;
-			var additionalError = null
-
-			// Sporadically whoisxmapi seems to not have any response at all
-			// We haven't caught this yet, so let log it.
-			if ( ! res ) {
-				log('No response from whoisxmlapi!', err)
-				cb(err, null)
-				return
-			}
-
+			// whoisxmlapi.com incorrectly uses text/plain as the type instead of JSON
 			// the res may sometimes actually *be HTML instead of JSON* - usually for
 			// 404s etc. Christ.
-			if ( res.text ) {
-				isHTML = ( res.text['0'] === '<' )
+			var isHTML = false;
+			if ( response.text ) {
+				isHTML = ( response.text['0'] === '<' )
 				if ( isHTML ) {
-					log('HTML response from whoisxmlapi for', res.req.path, res.text)
-					err = 'Got non-JSON response from whoisxmlapi'
+					throw new Error(`Got non-JSON response from whoisxmlapi ${response.req.path}`)
 					return
 				} else {
 					// whoisxmlapi.com incorrectly uses text/plain as the type instead of JSON
-					res.body = JSON.parse(res.text);
+					response.body = JSON.parse(response.text);
 				}
 			}
 
-			// Eg, { ErrorMessage: { msg: 'User Account certsimple has 0/5100 queries available, please refill' } }
-			if ( res.body ) {
-				var additionalError = _.get(res.body, ['ErrorMessage','msg'], null)
+			// There are sometimes additional errors
+			// Eg, { ErrorMessage: { msg: 'User Account useraccountname has 0/5100 queries available, please refill' } }
+			var additionalError = null
+			if ( response.body ) {
+				additionalError = _.get(response.body, ['ErrorMessage','msg'], null)
 				if ( additionalError ) {
-					err = additionalError;
+					throw new Error(additionalError)
 				}
 			}
 
-			if ( err ) {
-				log("whoisxmlapi error:", err)
-				cb(err)
-				return
-			}
+			return response.body
 
-			cb(err, res.body || null)
-
-		})
+		}	catch (error) {
+			// Sporadically whoisxmapi seems to not have any response at all
+			// We haven't caught this yet, so let log it.x
+			log('No response from whoisxmlapi!', error)
+		}
 	}
 
 	// whoisxmlapi has a weird way of encoding booleans
@@ -77,46 +65,44 @@ module.exports = function(username, password, options){
 		return value ? 1 : 0;
 	}
 
-	var lookupRaw = function(domain, cb){
+	var lookupRaw = function(domain){
 		// See https://www.whoisxmlapi.com/code/javascript/whois.txt
 		// NOTE: the docs use an insecure URL, but https works.
-		get('/whoisserver/WhoisService', {
+		return get('/whoisserver/WhoisService', {
 			domainName: domain
-		}, cb);
+		});
 	}
 
 	// Add a cache to whois
 	// Makes our app faster and limits repeated API calls
-	var lookup = function(domain, cb){
+	var lookup = function(domain){
 		var cachedEntry = lookupCache.get(domain)
 		if ( cachedEntry ) {
-			cb(null, cachedEntry)
-			return
+			return cachedEntry
 		}
-		lookupRaw(domain, function(err, result){
-			if ( ! err ) {
-				if ( result ) {
-					lookupCache.set(domain, result)
-				}
-			}
-			cb(err, result)
-		})
+		const result = lookupRaw(domain)
+
+		if ( result ) {
+			lookupCache.set(domain, result)
+		}
+
+		return result
 	}
 
 	var setWarnThreshold = function(warnThreshold, warnThresholdEnabled, warnEmptyEnabled, cb){
 		// See https://www.whoisxmlapi.com/code/javascript/whois.txt
-		get('/accountServices.php', {
+		return get('/accountServices.php', {
 			servicetype: "accountUpdate",
 			warn_threshold: warnThreshold,
 			warn_threshold_enabled: toBool(warnThresholdEnabled),
 			warn_empty_enabled: toBool(warnEmptyEnabled)
-		}, cb);
+		});
 	}
 
 	var getAccountBalance = function(cb){
-		get('/accountServices.php', {
+		return get('/accountServices.php', {
 			servicetype: "accountbalance"
-		}, cb)
+		})
 	}
 
 	return {
