@@ -16,9 +16,13 @@ Hence writing this module to:
  - a) help me use the service
  - b) save you the trouble of working around the oddness described above
 
-# Note: version 2 of whoisxmlapi requires node 8
+# Now requires node 8
 
 This library now uses async/awaitfrom node v8. This means you can `await` results from your whois tests without callbacks.
+
+	const result = await whois.lookup('google.com')
+
+Use v1 if you really like callbacks.
 
 # Installation
 
