@@ -18,7 +18,7 @@ Hence writing this module to:
 
 # Now requires node 8
 
-This library now uses async/awaitfrom node v8. This means you can `await` results from your whois tests without callbacks.
+This library now uses async/awaitfrom node 8. This means you can `await` results from your whois tests without callbacks.
 
 	const result = await whois.lookup('google.com')
 
