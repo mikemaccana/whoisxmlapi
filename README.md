@@ -111,6 +111,16 @@ Returns the following results:
 		}
 	}
 
+## Domains that do not have whois
+
+If a domain does not have whois, the result will be `null`
+
+	const result = await whois.lookup('register.bs')
+
+Returns
+
+	null
+
 ## Getting account balance
 
 	const result = await whois.getAccountBalance()

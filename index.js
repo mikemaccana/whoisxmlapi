@@ -51,6 +51,11 @@ module.exports = function(username, password, options){
 				}
 			}
 
+			// If there's no whois (eg, .bs TLD) just return null
+			if ( _.get(response.body, 'WhoisRecord.dataError') === "MISSING_WHOIS_DATA") {
+				return null
+			}
+
 			return response.body
 
 		}	catch (error) {

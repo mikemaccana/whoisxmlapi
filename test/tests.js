@@ -90,6 +90,13 @@ suite('whoisxmlapi returns expected whois results (uses network)', function(){
 		assert(result.WhoisRecord.contactEmail)
 	})
 
+	test('Domain with no whois', async function(){
+		this.timeout(10 * 1000);
+		const result = await whois.lookup('register.bs')
+
+		assert(result.WhoisRecord.dataError === "MISSING_WHOIS_DATA")
+	})
+
 	test('london.com', async function(){
 		this.timeout(10 * 1000);
 		const result = await whois.lookup('london.com')
