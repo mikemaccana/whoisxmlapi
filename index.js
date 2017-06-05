@@ -45,7 +45,7 @@ module.exports = function(username, password, options){
 			// Eg, { ErrorMessage: { msg: 'User Account useraccountname has 0/5100 queries available, please refill' } }
 			var additionalError = null
 			if ( response.body ) {
-				additionalError = _.get(response.body, ['ErrorMessage','msg'], null)
+				additionalError = _.get(response.body,'ErrorMessage.msg')
 				if ( additionalError ) {
 					throw new Error(additionalError)
 				}
